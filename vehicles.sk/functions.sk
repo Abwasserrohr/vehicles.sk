@@ -352,9 +352,13 @@ function vehiclesTeleportVehicle(uuid:text,loc:location):
       set {_rely} to loop-value.get("relativeY")
       set {_relz} to loop-value.get("relativeZ")
 
-      set {_vector} to vector({_relx}, {_rely}, {_relz})
-      set {_tplocation} to vehiclesCalculateTeleport({_loc}.clone(), {_vector})
-      {_part}.teleport({_tplocation})
+      set {_tplocation} to {_loc}.clone()
+      add {_relx} to x-coord of {_tplocation}
+      add {_rely} to y-coord of {_tplocation}
+      add {_relz} to z-coord of {_tplocation}
+
+      if {_tplocation} is set:
+        {_part}.teleport({_tplocation})
 
 function vehiclesTeleportVehicleRelative(uuid:text,vector:object):
   set {_alivevehicles} to vehiclesGetTmpData("alivevehicles")
@@ -365,6 +369,9 @@ function vehiclesTeleportVehicleRelative(uuid:text,vector:object):
     set {_loc} to vehiclesGetTmpData("vehicles.sk|center|%{_uuid}%")
 
     set {_loc} to vehiclesCalculateTeleport({_loc},{_vector})
+    add {_vector}.getX() to x-coord of {_loc}
+    add {_vector}.getY() to y-coord of {_loc}
+    add {_vector}.getZ() to z-coord of {_loc}
     vehiclesSaveTmpData("vehicles.sk|center|%{_uuid}%",{_loc})
 
     loop ...{_parts}:
@@ -372,7 +379,10 @@ function vehiclesTeleportVehicleRelative(uuid:text,vector:object):
 
       set {_loc} to {_part}'s location
 
-      set {_tplocation} to vehiclesCalculateTeleport({_loc}.clone(), {_vector})
+      set {_tplocation} to {_loc}.clone()
+      add {_vector}.getX() to x-coord of {_tplocation}
+      add {_vector}.getY() to y-coord of {_tplocation}
+      add {_vector}.getZ() to z-coord of {_tplocation}
 
       if {_tplocation} is set:
         {_part}.teleport({_tplocation})
@@ -396,12 +406,6 @@ function vehiclesRotateVehicle(uuid:text,degrees:number):
       if {_tplocation} is not null:
         {_part}.teleport({_tplocation})
 
-function vehiclesCalculateTeleport(center:location,relative:object) :: location:
-  add {_relative}.getX() to x-coord of {_center}
-
-  add {_relative}.getY() to y-coord of {_center}
-
-  add {_relative}.getZ() to z-coord of {_center}
 
 function vehiclesCalculateRotation(center:location,partloc:location,degrees:number) :: object:
   {_center}.setY({_partloc}.getY())
