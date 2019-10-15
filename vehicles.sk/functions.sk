@@ -1,5 +1,4 @@
 
-
 command /testsummon:
   trigger:
     vehiclesKillAllVehicles()
@@ -18,6 +17,7 @@ command /testsummon:
     set {_uuid} to vehiclesSpawnVehicle({_vehicle},{_loc})
     add 1 to {_i}
     set {_part} to vehicesCreateVehiclePart(red concrete,air,air,air,air,air,"test")
+    set {_part} to vehiclesSetVehiclePartSetting({_part},"small",true)
     vehiclesAddVehiclePartToLivingVehicle({_uuid},{_part},{_i},0,0)
     wait 1 second
     vehiclesKillVehiclePartFromLivingVehicle({_uuid},"test")
@@ -73,6 +73,7 @@ function vehicesCreateVehiclePart(head:item=air,boots:item=air,chestplate:item=a
   set {_part} to new HashMap()
   set {_equipment} to new HashMap()
   set {_poses} to new HashMap()
+  set {_settings} to new HashMap()
   {_equipment}.put("head",{_head})
   {_equipment}.put("boots",{_boots})
   {_equipment}.put("chestplate",{_chestplate})
@@ -84,6 +85,7 @@ function vehicesCreateVehiclePart(head:item=air,boots:item=air,chestplate:item=a
   {_part}.put("uuid",{_uuid})
   {_part}.put("poses",{_poses})
   {_part}.put("equipment", {_equipment})
+  {_part}.put("settings",{_settings})
   return {_part}
 
 function vehiclesSetVehiclePartPose(part:object,pose:text,angle:object) :: object:
@@ -92,6 +94,12 @@ function vehiclesSetVehiclePartPose(part:object,pose:text,angle:object) :: objec
   if {_EulerAngle} is instance of EulerAngle:
     {_poses}.put({_pose},{_EulerAngle})
     {_part}.put("poses",{_poses})
+  return {_part}
+
+function vehiclesSetVehiclePartSetting(part:object,setting:text,value:object) :: object:
+  set {_settings} to {_part}.get("settings")
+  {_settings}.put({_setting},{_value})
+  {_part}.put("settings",{_settings})
   return {_part}
 
 function vehiclesCreateVehicle() :: object:
@@ -114,6 +122,39 @@ function vehiclesKillVehiclePartFromLivingVehicle(vehicleuuid:text,partuuid:text
   {_alivevehicles}.get({_vehicleuuid}).get("parts").remove({_partuuid})
   vehiclesSaveTmpData("alivevehicles",{_alivevehicles})
 
+function vehiclesApplyEntitySettings(entity:entity,partdata:object):
+
+  if {_partdata}.get("settings").get("arms") is set:
+    set {_arms} to {_partdata}.get("settings").get("arms")
+  else:
+    set {_arms} to false
+  {_entity}.setArms({_arms})
+
+  if {_partdata}.get("settings").get("baseplate") is set:
+    set {_baseplate} to {_partdata}.get("settings").get("baseplate")
+  else:
+    set {_baseplate} to false
+  {_entity}.setBasePlate({_baseplate})
+
+  if {_partdata}.get("settings").get("small") is set:
+    set {_small} to {_partdata}.get("settings").get("small")
+  else:
+    set {_small} to false
+  {_entity}.setSmall({_small})
+
+  if {_partdata}.get("settings").get("visible") is set:
+    set {_visible} to  {_partdata}.get("settings").get("visible")
+
+  else:
+    set {_visible} to false
+  {_entity}.setVisible({_visible})
+
+  if {_partdata}.get("settings").get("gravity") is set:
+    set {_gravity} to {_partdata}.get("settings").get("gravity")
+  else:
+    set {_gravity} to false
+  {_entity}.setGravity({_gravity})
+
 function vehiclesAddVehiclePartToLivingVehicle(vehicleuuid:text,part:object,relx:number=0,rely:number=0,relz:number=0):
 
   set {_center} to vehiclesGetTmpData("vehicles.sk|center|%{_vehicleuuid}%")
@@ -130,11 +171,9 @@ function vehiclesAddVehiclePartToLivingVehicle(vehicleuuid:text,part:object,relx
   spawn 1 armor stand at {_partloc}
   set {_vehiclepart} to last spawned entity
 
-  {_vehiclepart}.setArms(false)
-  {_vehiclepart}.setBasePlate(false)
-  {_vehiclepart}.setSmall(false)
-  {_vehiclepart}.setVisible(false)
-  {_vehiclepart}.setGravity(false)
+  vehiclesApplyEntitySettings({_vehiclepart},{_part})
+  
+
 
   #
   # > Equip armor and tools.
@@ -214,12 +253,8 @@ function vehiclesSpawnVehicle(vehicle:object,loc:location) :: text:
 
     spawn 1 armor stand at {_partloc}
     set {_part} to last spawned entity
+    vehiclesApplyEntitySettings({_part},{_parts}.get({_uuid}).get("part"))
 
-    {_part}.setArms(false)
-    {_part}.setBasePlate(false)
-    {_part}.setSmall(false)
-    {_part}.setVisible(false)
-    {_part}.setGravity(false)
   
     #
     # > Equip armor and tools.
