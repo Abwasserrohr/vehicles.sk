@@ -8,6 +8,9 @@ command /testsummon:
     loop 10 times:
       add 1 to {_i}
       set {_part} to vehicesCreateVehiclePart(black concrete)
+      set {_part} to vehiclesSetVehiclePartSetting({_part},"name","Test: %loop-number%")
+      set {_part} to vehiclesSetVehiclePartSetting({_part},"namevisible",true)
+
       set {_vehicle} to vehiclesAddVehiclePart({_vehicle},{_part},{_i},0,0)
 
     set {_part} to vehicesCreateVehiclePart(black concrete)
@@ -144,10 +147,21 @@ function vehiclesApplyEntitySettings(entity:entity,partdata:object):
 
   if {_partdata}.get("settings").get("visible") is set:
     set {_visible} to  {_partdata}.get("settings").get("visible")
-
   else:
     set {_visible} to false
   {_entity}.setVisible({_visible})
+
+  if {_partdata}.get("settings").get("name") is set:
+    set {_name} to  {_partdata}.get("settings").get("name")
+  else:
+    set {_name} to ""
+  {_entity}.setCustomName("%{_name}%")
+
+  if {_partdata}.get("settings").get("namevisible") is set:
+    set {_namevisible} to  {_partdata}.get("settings").get("namevisible")
+  else:
+    set {_namevisible} to false
+  {_entity}.setCustomNameVisible({_namevisible})
 
   if {_partdata}.get("settings").get("gravity") is set:
     set {_gravity} to {_partdata}.get("settings").get("gravity")
@@ -363,15 +377,14 @@ function vehiclesTeleportVehicle(uuid:text,loc:location):
 function vehiclesTeleportVehicleRelative(uuid:text,vector:object):
   set {_alivevehicles} to vehiclesGetTmpData("alivevehicles")
   set {_vehicle} to {_alivevehicles}.get("%{_uuid}%")
-
   if {_vehicle} is set:
     set {_parts} to {_vehicle}.get("parts")
     set {_loc} to vehiclesGetTmpData("vehicles.sk|center|%{_uuid}%")
 
-    set {_loc} to vehiclesCalculateTeleport({_loc},{_vector})
     add {_vector}.getX() to x-coord of {_loc}
     add {_vector}.getY() to y-coord of {_loc}
     add {_vector}.getZ() to z-coord of {_loc}
+
     vehiclesSaveTmpData("vehicles.sk|center|%{_uuid}%",{_loc})
 
     loop ...{_parts}:
@@ -385,7 +398,7 @@ function vehiclesTeleportVehicleRelative(uuid:text,vector:object):
       add {_vector}.getZ() to z-coord of {_tplocation}
 
       if {_tplocation} is set:
-        {_part}.teleport({_tplocation})
+        try {_part}.teleport({_tplocation})
 
 function vehiclesRotateVehicle(uuid:text,degrees:number):
   set {_alivevehicles} to vehiclesGetTmpData("alivevehicles")
@@ -404,7 +417,7 @@ function vehiclesRotateVehicle(uuid:text,degrees:number):
       set {_tplocation} to vehiclesCalculateRotation({_center}.clone(), {_part}.getLocation().clone(), {_degrees})
 
       if {_tplocation} is not null:
-        {_part}.teleport({_tplocation})
+        try {_part}.teleport({_tplocation})
 
 
 function vehiclesCalculateRotation(center:location,partloc:location,degrees:number) :: object:
